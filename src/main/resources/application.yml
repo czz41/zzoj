@@ -103,4 +103,4 @@ knife4j:
           - com.zz.zzoj.controller
 # 代码沙箱配置
 codesandbox:
-  type: thirdParty
+  type: example
