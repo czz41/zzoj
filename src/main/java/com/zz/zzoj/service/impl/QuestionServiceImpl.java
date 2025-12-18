@@ -142,10 +142,13 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         if (CollUtil.isEmpty(questionList)) {
             return questionVOPage;
         }
+        //这里的优势是只需要查询一次数据库,而不是多次查询数据库
         // 1. 关联查询用户信息
         Set<Long> userIdSet = questionList.stream().map(Question::getUserId).collect(Collectors.toSet());
         Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
                 .collect(Collectors.groupingBy(User::getId));
+        // 这里的Map中的值为List<User>是因为groupingBy()方法返回的Map的value值是一个List，
+        // 所以这里需要使用stream()方法对List进行遍历，并返回一个List<User>
         // 填充信息
         List<QuestionVO> questionVOList = questionList.stream().map(question -> {
             QuestionVO questionVO = QuestionVO.objToVo(question);

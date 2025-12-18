@@ -1,11 +1,19 @@
 package com.zz.zzoj.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.zz.zzoj.annotation.AuthCheck;
 import com.zz.zzoj.common.BaseResponse;
 import com.zz.zzoj.common.ErrorCode;
 import com.zz.zzoj.common.ResultUtils;
+import com.zz.zzoj.constant.UserConstant;
 import com.zz.zzoj.exception.BusinessException;
+import com.zz.zzoj.model.dto.question.QuestionQueryRequest;
 import com.zz.zzoj.model.dto.questionsubmit.QuestionSubmitAddRequest;
+import com.zz.zzoj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
+import com.zz.zzoj.model.entity.Question;
+import com.zz.zzoj.model.entity.QuestionSubmit;
 import com.zz.zzoj.model.entity.User;
+import com.zz.zzoj.model.vo.QuestionSubmitVO;
 import com.zz.zzoj.service.QuestionSubmitService;
 import com.zz.zzoj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +32,7 @@ import javax.servlet.http.HttpServletRequest;
  * @from <a href="https://zz.icu">编程导航知识星球</a>
  */
 @RestController
-@RequestMapping("/question_submit")
+@RequestMapping("/question/question_submit")
 @Slf4j
 public class QuestionSubmitController {
 
@@ -54,4 +62,22 @@ public class QuestionSubmitController {
         return ResultUtils.success(questionSubmitId);
     }
 
+
+    /**
+     * 分页获取题目提交列表（处管理员外用户只能看到非答案，提交代码等公开信息）
+     *
+     * @param questionSubmitQueryRequest
+     * @return
+     */
+    @PostMapping("/list/page")
+    @AuthCheck(mustRole = UserConstant.DEFAULT_ROLE)
+    public BaseResponse<Page<QuestionSubmitVO>> listQuestionByPage(@RequestBody QuestionSubmitQueryRequest questionSubmitQueryRequest
+            , HttpServletRequest request) {
+        long current = questionSubmitQueryRequest.getCurrent();
+        long size = questionSubmitQueryRequest.getPageSize();
+        Page<QuestionSubmit> questionSubmitPage = questionSubmitService.page(new Page<>(current, size),
+                questionSubmitService.getQueryWrapper(questionSubmitQueryRequest));
+        final User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(questionSubmitService.getQuestionSubmitVOPage(questionSubmitPage, loginUser));
+    }
 }
