@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zz.zzoj.common.ErrorCode;
 import com.zz.zzoj.constant.CommonConstant;
 import com.zz.zzoj.exception.BusinessException;
+import com.zz.zzoj.judge.JudgeService;
 import com.zz.zzoj.model.dto.question.QuestionQueryRequest;
 import com.zz.zzoj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.zz.zzoj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
@@ -15,6 +16,7 @@ import com.zz.zzoj.model.entity.QuestionSubmit;
 import com.zz.zzoj.model.entity.User;
 import com.zz.zzoj.model.enums.QuestionSubmitEnum;
 import com.zz.zzoj.model.enums.QuestionSubmitLanguageEnum;
+import com.zz.zzoj.model.enums.QuestionSubmitStatusEnum;
 import com.zz.zzoj.model.vo.QuestionSubmitVO;
 import com.zz.zzoj.model.vo.QuestionVO;
 import com.zz.zzoj.model.vo.UserVO;
@@ -26,6 +28,7 @@ import com.zz.zzoj.utils.SqlUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +55,9 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
 
     @Resource
     private UserService userService;
+    @Resource
+    @Lazy
+    private JudgeService judgeService;
 
     /**
      * 提交题目
@@ -61,13 +68,12 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
      */
     @Override
     public Long doQuestionSubmit(QuestionSubmitAddRequest questionSubmitAddRequest, User loginUser) {
-        //校验编程语言是否合法
-        String language = questionSubmitAddRequest.getLanguage();
+        String language= questionSubmitAddRequest.getLanguage();
         QuestionSubmitLanguageEnum languageEnum = QuestionSubmitLanguageEnum.getEnumByValue(language);
-        if (languageEnum == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "编程语言错误");
+        if(languageEnum==null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"编程语言错误");
         }
-        long questionId = questionSubmitAddRequest.getQuestionId();
+        long questionId= questionSubmitAddRequest.getQuestionId();
         // 判断实体是否存在，根据类别获取实体
         Question question = questionService.getById(questionId);
         if (question == null) {
@@ -75,19 +81,25 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         }
         // 是否已提交题目
         long userId = loginUser.getId();
-        QuestionSubmit questionSubmit=new QuestionSubmit();
-        questionSubmit.setQuestionId(questionId);
+        // 每个用户串行提交题目
+        // 锁必须要包裹住事务方法
+        QuestionSubmit questionSubmit = new QuestionSubmit();
         questionSubmit.setUserId(userId);
+        questionSubmit.setQuestionId(questionId);
         questionSubmit.setCode(questionSubmitAddRequest.getCode());
-        questionSubmit.setLanguage(questionSubmitAddRequest.getLanguage());
-        //todo 设置初始状态
-        questionSubmit.setStatus(QuestionSubmitEnum.WAITING.getValue());
+        questionSubmit.setLanguage(language);
+        questionSubmit.setStatus(QuestionSubmitStatusEnum.WATING.getValue());
         questionSubmit.setJudgeInfo("{}");
-        boolean save =this.save(questionSubmit);
+        boolean save = this.save(questionSubmit);
         if(!save){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "保存失败");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"数据输入失败");
         }
-        return questionSubmit.getId();
+        Long questionSubmitId = questionSubmit.getId();
+        //执行判题服务
+        CompletableFuture.runAsync(() -> {
+            judgeService.doJudge(questionSubmitId);
+        });
+        return questionSubmitId;
     }
 
 

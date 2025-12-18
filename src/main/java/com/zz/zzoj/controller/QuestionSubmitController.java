@@ -49,7 +49,7 @@ public class QuestionSubmitController {
      * @param request
      * @return 提交记录id
      */
-    @PostMapping("/")
+    @PostMapping("/do")
     public BaseResponse<Long> doQuestionSubmit(@RequestBody QuestionSubmitAddRequest questionSubmitAddRequest,
             HttpServletRequest request) {
         if (questionSubmitAddRequest == null || questionSubmitAddRequest.getQuestionId() <= 0) {

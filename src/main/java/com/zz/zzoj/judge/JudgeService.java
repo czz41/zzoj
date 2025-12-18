@@ -1,7 +1,7 @@
 package com.zz.zzoj.judge;
 
-import com.zz.zzoj.model.vo.QuestionSubmitVO;
+import com.zz.zzoj.model.entity.QuestionSubmit;
 
 public interface JudgeService {
-    QuestionSubmitVO doJudge(long questionSubmitId);
+    QuestionSubmit doJudge(long questionSubmitId);
 }
