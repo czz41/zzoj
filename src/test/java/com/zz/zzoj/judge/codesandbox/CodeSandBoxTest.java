@@ -68,7 +68,16 @@ class CodeSandBoxTest {
     void executeCodeByProxy() {
         CodeSandbox codeSandbox = CodeSandboxFactory.newInstance(type);
         codeSandbox=new CodeSandboxProxy(codeSandbox);
-        String code = "int main() {}";
+        String code = "import java.io.FileWriter;\n" +
+                "import java.io.IOException;\n" +
+                "import java.nio.charset.StandardCharsets;\n" +
+                "public class Main{\n" +
+                "    public static void main(String[] args) {\n" +
+                "        Integer a = Integer.parseInt(args[0]);\n" +
+                "        Integer b = Integer.parseInt(args[1]);\n" +
+                "        System.out.println(args[0]+\"+\"+args[1]+\"=\"+(a+b));\n" +
+                "    }\n" +
+                "}";
         String language = QuestionSubmitLanguageEnum.JAVA.getValue();
         List<String> inputList = Arrays.asList("1 2", "3 4");
         ExecuteCodeRequest executeCodeRequest = ExecuteCodeRequest.builder()

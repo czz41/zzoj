@@ -3,7 +3,7 @@ package com.zz.zzoj.judge.strategy;
 import cn.hutool.json.JSONUtil;
 import com.zz.zzoj.model.dto.question.JudgeCase;
 import com.zz.zzoj.model.dto.question.JudgeConfig;
-import com.zz.zzoj.model.dto.questionsubmit.JudgeInfo;
+import com.zz.zzoj.judge.codesandbox.model.JudgeInfo;
 import com.zz.zzoj.model.entity.Question;
 import com.zz.zzoj.model.enums.JudgeInfoMessageEnum;
 

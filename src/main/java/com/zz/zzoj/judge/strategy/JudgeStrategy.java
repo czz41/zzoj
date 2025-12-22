@@ -1,6 +1,6 @@
 package com.zz.zzoj.judge.strategy;
 
-import com.zz.zzoj.model.dto.questionsubmit.JudgeInfo;
+import com.zz.zzoj.judge.codesandbox.model.JudgeInfo;
 
 public interface JudgeStrategy {
     /**
