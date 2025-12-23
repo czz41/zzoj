@@ -144,6 +144,8 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         if(!Objects.equals(userId, questionSubmit.getUserId())&&!userService.isAdmin(loginUser)) {
             questionSubmitVO.setCode(null);
         }
+        UserVO  userVO = userService.getUserVO(loginUser);
+        questionSubmitVO.setUserVO(userVO);
         return questionSubmitVO;
     }
 
