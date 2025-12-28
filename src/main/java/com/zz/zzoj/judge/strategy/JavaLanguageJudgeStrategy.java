@@ -20,7 +20,7 @@ public class JavaLanguageJudgeStrategy implements JudgeStrategy{
     public JudgeInfo doJudge(JudgeContext judgeContext) {
         JudgeInfo judgeInfo = judgeContext.getJudgeInfo();
         Long memory = Optional.ofNullable(judgeInfo.getMemory()).orElse(0L);
-        Long time = Optional.ofNullable(judgeInfo.getTime()).orElse(0L);
+         Long time = Optional.ofNullable(judgeInfo.getTime()).orElse(0L);
         List<String> inputList = judgeContext.getInputList();
         List<String> outputList = judgeContext.getOutputList();
         Question question = judgeContext.getQuestion();
@@ -29,6 +29,24 @@ public class JavaLanguageJudgeStrategy implements JudgeStrategy{
         JudgeInfo judgeInfoResponse=new JudgeInfo();
         judgeInfoResponse.setMemory(memory);
         judgeInfoResponse.setTime(time);
+        //判断题目限制
+
+        String judgeConfigStr = question.getJudgeConfig();
+        JudgeConfig judgeConfig = JSONUtil.toBean(judgeConfigStr, JudgeConfig.class);
+        Long needMemoryLimit = judgeConfig.getMemoryLimit();
+        Long needTimeLimit = judgeConfig.getTimeLimit();
+        if(memory>needMemoryLimit){
+            judgeInfoMessageEnum=JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED;
+            judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
+            return judgeInfoResponse;
+        }
+        //Java程序本身需要额外执行10秒钟
+        long JAVA_PROGRAM_TIME_COST=10000L;
+        if((time - JAVA_PROGRAM_TIME_COST) >needTimeLimit){
+            judgeInfoMessageEnum=JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED;
+            judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
+            return judgeInfoResponse;
+        }
         //先判断沙箱执行的结果输出数量是否和预期输出数量相等
         if(outputList.size()!= inputList.size()){
             judgeInfoMessageEnum=JudgeInfoMessageEnum.WRONG_ANSWER;
@@ -44,24 +62,7 @@ public class JavaLanguageJudgeStrategy implements JudgeStrategy{
                 return judgeInfoResponse;
             }
         }
-        //判断题目限制
 
-        String judgeConfigStr = question.getJudgeConfig();
-        JudgeConfig judgeConfig = JSONUtil.toBean(judgeConfigStr, JudgeConfig.class);
-        Long needMemoryLimit = judgeConfig.getMemoryLimit();
-        Long needTimeLimit = judgeConfig.getTimeLimit();
-        if(memory>needMemoryLimit){
-            judgeInfoMessageEnum=JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED;
-            judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
-            return judgeInfoResponse;
-        }
-        //Java程序本身需要额外执行10秒钟
-        long JAVA_PROGRAM_TIME_COST=1000L;
-        if((time - JAVA_PROGRAM_TIME_COST) >needTimeLimit){
-            judgeInfoMessageEnum=JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED;
-            judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
-            return judgeInfoResponse;
-        }
         judgeInfoResponse.setMessage(judgeInfoMessageEnum.getValue());
         return judgeInfoResponse;
     }

@@ -139,12 +139,12 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
     @Override
     public QuestionSubmitVO getQuestionSubmitVO(QuestionSubmit questionSubmit, User loginUser) {
         QuestionSubmitVO questionSubmitVO = QuestionSubmitVO.objToVo(questionSubmit);
-        //User loginUser=userService.getLoginUser(request);
-        Long userId = loginUser.getId();
+        Long userId = questionSubmit.getUserId();
+        User submitUser=userService.getById(userId);
         if(!Objects.equals(userId, questionSubmit.getUserId())&&!userService.isAdmin(loginUser)) {
             questionSubmitVO.setCode(null);
         }
-        UserVO  userVO = userService.getUserVO(loginUser);
+        UserVO  userVO = userService.getUserVO(submitUser);
         questionSubmitVO.setUserVO(userVO);
         return questionSubmitVO;
     }

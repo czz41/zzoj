@@ -23,6 +23,7 @@ import com.zz.zzoj.service.QuestionSubmitService;
 import com.zz.zzoj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -121,11 +122,22 @@ public class QuestionController {
      * @return
      */
     @PostMapping("/update")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> updateQuestion(@RequestBody QuestionUpdateRequest questionUpdateRequest) {
+    //@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> updateQuestion(@RequestBody QuestionUpdateRequest questionUpdateRequest,
+                                                HttpServletRequest request) {
         if (questionUpdateRequest == null || questionUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        //TODO 判断当前用户是否为管理员或者创建题目者
+        User loginUser = userService.getLoginUser(request);
+        long id = questionUpdateRequest.getId();
+        Question oldQuestion = questionService.getById(id);
+        // 仅本人或管理员可更新
+        if (!oldQuestion.getUserId().equals(loginUser.getId()) && !userService.isAdmin(request)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+
+
         Question question = new Question();
         BeanUtils.copyProperties(questionUpdateRequest, question);
         List<String> tags = questionUpdateRequest.getTags();
@@ -142,9 +154,9 @@ public class QuestionController {
         }
         // 参数校验
         questionService.validQuestion(question, false);
-        long id = questionUpdateRequest.getId();
-        // 判断是否存在
-        Question oldQuestion = questionService.getById(id);
+//        long id = questionUpdateRequest.getId();
+//        // 判断是否存在
+//        Question oldQuestion = questionService.getById(id);
         ThrowUtils.throwIf(oldQuestion == null, ErrorCode.NOT_FOUND_ERROR);
         boolean result = questionService.updateById(question);
         return ResultUtils.success(result);
@@ -186,12 +198,22 @@ public class QuestionController {
      * @return
      */
     @PostMapping("/list/page")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<Question>> listQuestionByPage(@RequestBody QuestionQueryRequest questionQueryRequest) {
+    @AuthCheck(mustRole = UserConstant.USER_LOGIN_STATE)
+    public BaseResponse<Page<Question>> listQuestionByPage(@RequestBody QuestionQueryRequest questionQueryRequest,HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        questionQueryRequest.setUserId(loginUser.getId());
         long current = questionQueryRequest.getCurrent();
         long size = questionQueryRequest.getPageSize();
         Page<Question> questionPage = questionService.page(new Page<>(current, size),
                 questionService.getQueryWrapper(questionQueryRequest));
+        //TODO 如果没有创建过题目，返回一个管理题目样例
+        if (CollectionUtils.isEmpty(questionPage.getRecords())) {
+            //返回管理题目样例
+            questionQueryRequest.setId(666L);
+            questionPage = questionService.page(new Page<>(current, size),
+                    questionService.getQueryWrapper(questionQueryRequest));
+            return ResultUtils.success(questionPage);
+        }
         return ResultUtils.success(questionPage);
     }
 
@@ -295,7 +317,7 @@ public class QuestionController {
         if (questionSubmitAddRequest == null || questionSubmitAddRequest.getQuestionId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 登录才能点赞
+        // 登录才能提交
         final User loginUser = userService.getLoginUser(request);
         long questionId = questionSubmitAddRequest.getQuestionId();
         Long questionSubmitId = questionSubmitService.doQuestionSubmit(questionSubmitAddRequest, loginUser);

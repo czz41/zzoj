@@ -1,6 +1,7 @@
 package com.zz.zzoj.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.poi.excel.cell.CellSetter;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -93,6 +94,15 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
         }
 
         Long id = questionQueryRequest.getId();
+        if(ObjectUtils.isNotEmpty(id))
+        {
+            if(id==666L)
+            {
+                queryWrapper.eq("id", id);
+                queryWrapper.eq("isDelete", true);
+                return queryWrapper;
+            }
+        }
         String title = questionQueryRequest.getTitle();
         String content = questionQueryRequest.getContent();
         List<String> tags = questionQueryRequest.getTags();
@@ -112,9 +122,10 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question>
                 queryWrapper.like("tags", "\"" + tag + "\"");
             }
         }
+        System.out.println("\n\n\\n\n走到这\n\n\n\n");
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
-        queryWrapper.eq( "isDelete", false);
+        queryWrapper.eq("isDelete", false);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;

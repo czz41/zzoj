@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 /**
  * 判题消息枚举
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
  */
 public enum JudgeInfoMessageEnum {
 
@@ -20,10 +18,10 @@ public enum JudgeInfoMessageEnum {
     TIME_LIMIT_EXCEEDED("超时", "Time Limit Exceeded"),
     PRESENTATION_ERROR("展示错误", "Presentation Error"),
     WAITING("等待中","Waiting"),
-    OUTPUT_LIMIT_EXCEEDED("输出溢出", "Output Limit Exceeded"),
+    OUTPUT_LIMIT_EXCEEDED("输出溢出", "Output Limit Exceeded"),//输出超限灰色（#9E9E9E）
     DANGEROUS_OPERATION("危险操作", "Dangerous Operation"),
     RUNTIME_ERROR("运行错误", "Runtime Error"),
-    SYSTEM_ERROR("系统错误", "System Error");
+    SYSTEM_ERROR("系统错误", "System Error");//未知错误黑色（#000000）
 
     private final String text;
 

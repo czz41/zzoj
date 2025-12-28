@@ -88,7 +88,7 @@ public class Question {
     /**
      * 是否删除
      */
-    @TableLogic  //逻辑删除，可加可不加，已经在yml文件中配置了全局逻辑删除字段，会被mybatis-plus自动管理
+    //@TableLogic  //逻辑删除，可加可不加，已经在yml文件中配置了全局逻辑删除字段，会被mybatis-plus自动管理
     /**
      * 开发人员之间的沟通注释，告诉阅读代码的开发者，
      * 当前字段使用了@TableLogic注解，
